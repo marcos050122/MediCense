@@ -20,6 +20,11 @@ export const storageService = {
     }
   },
 
+  getReportById: (id: string): Report | undefined => {
+    const reports = storageService.getReports();
+    return reports.find(r => r.id === id);
+  },
+
   saveReport: (report: Report): void => {
     const reports = storageService.getReports();
     // Add new report to the beginning
