@@ -1,0 +1,5 @@
+{
+  "name": "MediCenso - Registro Sanitario",
+  "description": "Aplicación ágil para el registro de datos sanitarios y poblacionales en tiempo real. Optimizada para móviles con exportación a PDF y Excel.",
+  "requestFramePermissions": []
+}
