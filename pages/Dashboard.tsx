@@ -132,109 +132,107 @@ const Dashboard: React.FC = () => {
     : null;
 
   return (
-    <div className="flex flex-col max-w-2xl mx-auto">
-      {/* Sticky Header Section */}
-      <div className="sticky top-0 z-20 bg-slate-50/95 backdrop-blur-sm pt-2 pb-1 px-4 space-y-2 border-b border-slate-200/50">
-        {/* Statistics and Filter Indicator in one row */}
+    <div className="flex flex-col max-w-2xl mx-auto p-4 space-y-3">
+      {/* Sticky Quick Actions & Stats */}
+      <div className="sticky top-0 z-20 bg-slate-50/95 backdrop-blur-md py-4 -mx-4 px-4 space-y-3 border-b border-slate-200/50">
         <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 bg-white/50 px-3 py-1.5 rounded-xl border border-slate-200/60 shadow-sm grow">
-            <div className="flex flex-col">
-              <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">Reportes</span>
-              <span className="text-sm font-black text-medical-600 leading-none mt-0.5">{reports.length}</span>
+          <div className="flex items-center gap-4 bg-white rounded-2xl p-2.5 border border-slate-200 shadow-sm">
+            <div className="flex flex-col px-2">
+              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Reportes</span>
+              <span className="text-base font-black text-medical-600 leading-none mt-1">{reports.length}</span>
             </div>
-            <div className="w-px h-5 bg-slate-200"></div>
-            <div className="flex flex-col">
-              <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">Población</span>
-              <span className="text-sm font-black text-accent-600 leading-none mt-0.5">{totalPopulation}</span>
+            <div className="w-px h-6 bg-slate-100"></div>
+            <div className="flex flex-col px-2">
+              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Población</span>
+              <span className="text-base font-black text-accent-600 leading-none mt-1">{totalPopulation}</span>
             </div>
-          </div>
-
-          <div className="flex-shrink-0">
-            <span className="text-[7px] font-bold text-slate-400 bg-slate-200/50 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
-              {searchTerm ? 'Filtrado' : 'Recientes'}
-            </span>
           </div>
         </div>
 
         {/* Ultra-compact Search Bar */}
         <div className="relative group">
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-medical-500 transition-colors">
-            <Search size={14} />
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-medical-500 transition-colors">
+            <Search size={18} />
           </div>
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar ubicación..."
-            className="w-full pl-9 pr-8 py-1.5 rounded-xl border border-slate-200 bg-white focus:border-medical-500 focus:ring-2 focus:ring-medical-100 outline-none transition-all text-xs font-bold placeholder:text-slate-400 shadow-sm"
+            placeholder="Buscar ubicación o referencia..."
+            className="w-full pl-11 pr-10 py-3.5 rounded-2xl border-2 border-slate-200 bg-white focus:border-medical-500 focus:ring-4 focus:ring-medical-50 outline-none transition-all text-sm font-bold placeholder:text-slate-400 shadow-sm"
           />
           {searchTerm && (
             <button
               onClick={() => setSearchTerm('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 bg-slate-100 p-1 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
             >
-              <X size={14} />
+              <X size={16} />
             </button>
           )}
         </div>
       </div>
 
       {/* Reports List */}
-      <div className="px-4 pb-24 space-y-3 mt-2">
+      <div className="pb-24 space-y-4">
         {reports.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-3xl border-2 border-dashed border-slate-100 p-8">
-            <div className="bg-slate-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Activity className="text-slate-300" size={32} />
+          <div className="text-center py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100 p-8 shadow-sm">
+            <div className="bg-slate-50 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <Activity className="text-slate-300" size={40} />
             </div>
-            <p className="text-slate-500 font-bold text-lg">No hay registros</p>
-            <p className="text-slate-400 text-sm mt-1">Tus reportes aparecerán aquí.</p>
+            <h3 className="text-slate-900 font-black text-xl">Sin registros</h3>
+            <p className="text-slate-400 text-sm mt-2 max-w-[240px] mx-auto leading-relaxed">Comienza creando tu primer reporte usando el botón inferior.</p>
           </div>
         ) : filteredReports.length === 0 ? (
-          <div className="text-center py-12 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-200 p-8">
-            <div className="bg-white w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
-              <Search className="text-slate-300" size={24} />
+          <div className="text-center py-16 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100 p-8 shadow-sm">
+            <div className="bg-slate-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Search className="text-slate-300" size={32} />
             </div>
-            <p className="text-slate-500 font-bold">No se encontraron resultados</p>
-            <p className="text-slate-400 text-xs mt-1">Intenta con otros términos de búsqueda.</p>
+            <h3 className="text-slate-900 font-black">Sin resultados</h3>
+            <p className="text-slate-400 text-xs mt-1">No encontramos nada para "{searchTerm}"</p>
           </div>
         ) : (
           filteredReports.map((report) => (
             <div
               key={report.id}
               onClick={() => navigate(`/edit/${report.id}`)}
-              className="group bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 hover:border-medical-300 hover:shadow-md transition-all active:scale-[0.99] flex flex-col gap-2.5 cursor-pointer"
+              className="group bg-white p-5 rounded-[2rem] shadow-xl shadow-slate-200/40 border border-slate-200 hover:border-medical-300 hover:shadow-2xl hover:shadow-medical-500/10 transition-all active:scale-[0.98] flex flex-col gap-4 cursor-pointer relative overflow-hidden"
             >
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-2.5">
-                  <div className="bg-medical-50 text-medical-600 p-2 rounded-lg">
-                    <MapPin size={16} />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-slate-900 leading-none text-sm">{report.location}</h3>
-                      {report.id === latestActiveReportId && (
-                        <span className="bg-blue-50 text-blue-600 text-[7px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-tighter border border-blue-100">
-                          Reciente
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mt-1">
-                      {format(new Date(report.timestamp), 'dd MMM, HH:mm', { locale: es })}
-                    </p>
+              {report.id === latestActiveReportId && (
+                <div className="absolute top-0 right-0">
+                  <div className="bg-medical-500 text-white text-[8px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest shadow-lg">
+                    Reciente
                   </div>
                 </div>
+              )}
+
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-3.5">
+                  <div className="bg-medical-50 text-medical-600 p-3 rounded-2xl shadow-inner">
+                    <MapPin size={22} />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-slate-900 leading-none text-lg tracking-tight">{report.location}</h3>
+                    <div className="flex items-center gap-2 mt-1.5 text-slate-400">
+                      <Calendar size={12} />
+                      <p className="text-[10px] font-black uppercase tracking-widest">
+                        {format(new Date(report.timestamp), 'dd MMMM, HH:mm', { locale: es })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDelete(report.id);
                   }}
-                  className="text-slate-300 hover:text-red-500 p-1.5 hover:bg-red-50 rounded-lg transition-all"
+                  className="bg-slate-50 text-slate-300 hover:text-red-500 hover:bg-red-50 p-3 rounded-2xl transition-all active:scale-90"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={20} />
                 </button>
               </div>
 
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 py-2 border-y border-slate-50">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 py-4 border-y border-slate-50">
                 {fields
                   .filter(f => {
                     const val = report.data[f.id];
@@ -252,11 +250,11 @@ const Dashboard: React.FC = () => {
                     }
 
                     return (
-                      <div key={field.id} className="flex items-center gap-1.5 bg-slate-50/50 px-2 py-0.5 rounded-md border border-slate-100/50">
-                        <span className="text-[7.5px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
-                          {field.label.length > 12 ? field.label.substring(0, 10) + '..' : field.label}
+                      <div key={field.id} className="flex items-center gap-2 bg-slate-100/50 px-3 py-1.5 rounded-xl border border-slate-100">
+                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                          {field.label.length > 15 ? field.label.substring(0, 12) + '..' : field.label}
                         </span>
-                        <span className={`text-xs font-black ${field.type === 'boolean' ? (rawValue ? 'text-medical-600' : 'text-red-500') : 'text-slate-800'}`}>
+                        <span className={`text-sm font-black ${field.type === 'boolean' ? (rawValue ? 'text-medical-600' : 'text-red-500') : 'text-slate-800'}`}>
                           {displayValue}
                         </span>
                       </div>
@@ -268,16 +266,16 @@ const Dashboard: React.FC = () => {
                   if (f.type === 'boolean') return val !== undefined && val !== null;
                   return val !== undefined && val !== '' && val !== 0;
                 }).length === 0 && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest italic">Sin datos</span>
+                    <div className="flex items-center gap-2 py-1">
+                      <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest italic">Sin datos registrados</span>
                     </div>
                   )}
               </div>
 
               {report.notes && (
-                <div className="bg-slate-50/50 p-2 rounded-xl border border-slate-100/50">
-                  <p className="text-[11px] text-slate-600 font-medium leading-relaxed line-clamp-2">
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mr-2">Notas:</span>
+                <div className="bg-slate-50/80 p-3 rounded-2xl border border-slate-100">
+                  <p className="text-xs text-slate-600 font-medium leading-relaxed line-clamp-2">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-2">Observaciones:</span>
                     {report.notes}
                   </p>
                 </div>

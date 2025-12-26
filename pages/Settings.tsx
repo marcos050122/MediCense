@@ -130,12 +130,7 @@ const Settings: React.FC = () => {
   }
 
   return (
-    <div className="p-4 space-y-6 max-w-2xl mx-auto pb-24">
-      <div>
-        <h2 className="text-3xl font-black text-slate-900 mb-1">Configuración</h2>
-        <p className="text-slate-500 font-medium">Personaliza los campos de tu censo médico.</p>
-      </div>
-
+    <div className="p-4 space-y-4 max-w-2xl mx-auto pb-24">
       <div className="bg-white rounded-3xl shadow-xl shadow-slate-300/40 border border-slate-200 overflow-hidden">
         <div className="p-6 bg-slate-50/50 border-b border-slate-100 flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -196,16 +191,16 @@ const Settings: React.FC = () => {
                 <button
                   onClick={() => handleMoveField(index, 'up')}
                   disabled={index === 0}
-                  className="p-1 text-slate-300 hover:text-medical-500 hover:bg-medical-50 rounded-lg transition-all disabled:opacity-0"
+                  className="p-2 text-slate-300 hover:text-medical-500 hover:bg-medical-50 rounded-xl transition-all disabled:opacity-0 active:scale-90"
                 >
-                  <ChevronUp size={18} />
+                  <ChevronUp size={24} />
                 </button>
                 <button
                   onClick={() => handleMoveField(index, 'down')}
                   disabled={index === fields.length - 1}
-                  className="p-1 text-slate-300 hover:text-medical-500 hover:bg-medical-50 rounded-lg transition-all disabled:opacity-0"
+                  className="p-2 text-slate-300 hover:text-medical-500 hover:bg-medical-50 rounded-xl transition-all disabled:opacity-0 active:scale-90"
                 >
-                  <ChevronDown size={18} />
+                  <ChevronDown size={24} />
                 </button>
               </div>
 
@@ -269,23 +264,23 @@ const Settings: React.FC = () => {
                   <>
                     <button
                       onClick={() => handleToggleField(field.id)}
-                      className={`p-1 rounded-xl transition-all ${field.isActive ? 'text-medical-500 hover:bg-medical-50' : 'text-slate-200 hover:bg-slate-100'}`}
+                      className={`p-2 rounded-xl transition-all ${field.isActive ? 'text-medical-500 hover:bg-medical-50' : 'text-slate-200 hover:bg-slate-100'}`}
                     >
-                      {field.isActive ? <CheckSquare size={32} strokeWidth={2.5} /> : <Square size={32} strokeWidth={1} />}
+                      {field.isActive ? <CheckSquare size={36} strokeWidth={2.5} /> : <Square size={36} strokeWidth={1} />}
                     </button>
 
                     <button
                       onClick={() => startEditing(field)}
-                      className="p-2 text-slate-300 hover:text-medical-500 hover:bg-medical-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                      className="p-3 text-slate-400 hover:text-medical-500 hover:bg-medical-50 rounded-xl transition-all md:opacity-0 md:group-hover:opacity-100 active:scale-90"
                     >
-                      <Edit2 size={20} />
+                      <Edit2 size={22} />
                     </button>
 
                     <button
                       onClick={() => handleDeleteField(field.id)}
-                      className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                      className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all md:opacity-0 md:group-hover:opacity-100 active:scale-90"
                     >
-                      <Trash2 size={20} />
+                      <Trash2 size={22} />
                     </button>
                   </>
                 )}

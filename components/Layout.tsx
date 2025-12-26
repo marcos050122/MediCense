@@ -151,27 +151,27 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-end pb-safe safe-area shadow-lg z-20">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/60 flex justify-around items-end pb-safe safe-area shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.05)] z-40">
         <NavItem to="/" icon={Home} label="Inicio" />
-        <div className="relative -top-5">
+        <div className="relative -top-6">
           {isFormPage ? (
             <button
               onClick={() => saveTrigger?.()}
               disabled={isSaving || !saveTrigger}
-              className="bg-accent-600 hover:bg-accent-700 text-white p-4 rounded-full shadow-lg shadow-accent-500/30 transition-all active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed min-w-[64px] min-h-[64px]"
+              className="bg-accent-600 hover:bg-accent-700 text-white p-5 rounded-[2rem] shadow-2xl shadow-accent-600/40 transition-all active:scale-90 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed min-w-[72px] min-h-[72px]"
             >
               {isSaving ? (
-                <Loader2 size={32} className="animate-spin" />
+                <Loader2 size={36} className="animate-spin" />
               ) : (
-                <Save size={32} />
+                <Save size={36} />
               )}
             </button>
           ) : (
             <button
               onClick={() => navigate('/new')}
-              className="bg-medical-600 hover:bg-medical-700 text-white p-4 rounded-full shadow-lg shadow-medical-500/30 transition-transform active:scale-95 flex items-center justify-center"
+              className="bg-medical-600 hover:bg-medical-700 text-white p-5 rounded-[2rem] shadow-2xl shadow-medical-600/40 transition-all active:scale-90 flex items-center justify-center min-w-[72px] min-h-[72px]"
             >
-              <PlusCircle size={32} />
+              <PlusCircle size={36} />
             </button>
           )}
         </div>
