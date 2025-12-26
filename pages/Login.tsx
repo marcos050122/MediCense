@@ -59,6 +59,11 @@ const Login: React.FC = () => {
                     </svg>
                     <span className="text-lg">Continuar con Google</span>
                 </button>
+                <div className="mt-4 text-center">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                        Tu sesión permanecerá activa por 30 días
+                    </p>
+                </div>
             </div>
 
             <p className="mt-8 text-slate-400 text-sm font-medium uppercase tracking-widest">

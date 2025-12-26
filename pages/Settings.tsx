@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { storageService } from '../services/storage';
 import { FieldDefinition } from '../types';
-import { Plus, Trash2, CheckSquare, Square, GripVertical, AlertCircle, Cloud, User, LogOut, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, CheckSquare, Square, GripVertical, AlertCircle, Cloud, User, LogOut, Loader2, ChevronUp, ChevronDown, Edit2, Save, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 const Settings: React.FC = () => {
   const { user, signOut } = useAuth();
   const [fields, setFields] = useState<FieldDefinition[]>([]);
   const [newFieldName, setNewFieldName] = useState('');
+  const [newFieldType, setNewFieldType] = useState<'text' | 'number' | 'boolean'>('number');
   const [isAdding, setIsAdding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
+  const [editingFieldName, setEditingFieldName] = useState('');
+  const [editingFieldType, setEditingFieldType] = useState<'text' | 'number' | 'boolean'>('number');
 
   useEffect(() => {
     if (user) {
@@ -39,11 +43,11 @@ const Settings: React.FC = () => {
     if (!newFieldName.trim() || !user) return;
 
     setIsSaving(true);
-    const id = newFieldName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    const id = crypto.randomUUID();
     const newField: FieldDefinition = {
       id,
       label: newFieldName,
-      type: 'number',
+      type: newFieldType,
       isActive: true,
       order: fields.length + 1
     };
@@ -52,13 +56,47 @@ const Settings: React.FC = () => {
     setFields(updated);
     await storageService.saveFields(updated, user.id);
     setNewFieldName('');
+    setNewFieldType('number');
     setIsAdding(false);
+    setIsSaving(false);
+  };
+
+  const startEditing = (field: FieldDefinition) => {
+    setEditingFieldId(field.id);
+    setEditingFieldName(field.label);
+    setEditingFieldType(field.type);
+  };
+
+  const cancelEditing = () => {
+    setEditingFieldId(null);
+    setEditingFieldName('');
+  };
+
+  const handleUpdateField = async () => {
+    if (!editingFieldId || !editingFieldName.trim() || !user) return;
+
+    setIsSaving(true);
+    const updated = fields.map(f =>
+      f.id === editingFieldId
+        ? { ...f, label: editingFieldName, type: editingFieldType }
+        : f
+    );
+    setFields(updated);
+    await storageService.saveFields(updated, user.id);
+    setEditingFieldId(null);
     setIsSaving(false);
   };
 
   const handleDeleteField = async (id: string) => {
     if (!user) return;
-    if (confirm('¿Estás seguro de eliminar este campo? Esto solo afectará a los formularios nuevos.')) {
+
+    const inUse = await storageService.isFieldInUse(id);
+    if (inUse) {
+      alert('No se puede eliminar este campo porque tiene valores registrados en algunos reportes. Considere desactivarlo en su lugar.');
+      return;
+    }
+
+    if (confirm('¿Estás seguro de eliminar este campo?')) {
       const updated = fields.filter(f => f.id !== id);
       setFields(updated);
       await storageService.saveFields(updated, user.id);
@@ -98,28 +136,6 @@ const Settings: React.FC = () => {
         <p className="text-slate-500 font-medium">Personaliza los campos de tu censo médico.</p>
       </div>
 
-      {/* User Card */}
-      <div className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <img
-            src={user?.user_metadata.avatar_url || `https://ui-avatars.com/api/?name=${user?.email}`}
-            alt="Profile"
-            className="w-14 h-14 rounded-2xl border-4 border-slate-50 shadow-sm"
-          />
-          <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Cuenta Conectada</p>
-            <p className="text-slate-900 font-black text-lg leading-tight">{user?.user_metadata.full_name || 'Usuario'}</p>
-            <p className="text-slate-400 text-xs font-medium">{user?.email}</p>
-          </div>
-        </div>
-        <button
-          onClick={() => signOut()}
-          className="bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-500 p-3 rounded-2xl transition-all border border-slate-100"
-        >
-          <LogOut size={22} />
-        </button>
-      </div>
-
       <div className="bg-white rounded-3xl shadow-xl shadow-slate-300/40 border border-slate-200 overflow-hidden">
         <div className="p-6 bg-slate-50/50 border-b border-slate-100 flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -135,7 +151,7 @@ const Settings: React.FC = () => {
         </div>
 
         {isAdding && (
-          <div className="p-6 bg-medical-50/50 border-b border-medical-100 animate-in fade-in slide-in-from-top-4">
+          <div className="p-6 bg-medical-50/50 border-b border-medical-100 animate-in fade-in slide-in-from-top-4 space-y-4">
             <div className="flex gap-3">
               <input
                 type="text"
@@ -152,6 +168,23 @@ const Settings: React.FC = () => {
               >
                 {isSaving ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Guardar'}
               </button>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo de dato:</span>
+              <div className="flex bg-slate-100 p-1 rounded-xl gap-1">
+                {(['number', 'text', 'boolean'] as const).map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setNewFieldType(type)}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${newFieldType === type
+                      ? 'bg-white text-medical-600 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-600'
+                      }`}
+                  >
+                    {type === 'number' ? 'Numérico' : type === 'text' ? 'Texto' : 'Si/No'}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -175,30 +208,87 @@ const Settings: React.FC = () => {
                   <ChevronDown size={18} />
                 </button>
               </div>
-              <div className="flex-1">
-                <p className={`font-black text-lg tracking-tight ${field.isActive ? 'text-slate-800' : 'text-slate-300 line-through'}`}>
-                  {field.label}
-                </p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[10px] bg-slate-100 text-slate-400 px-2 py-0.5 rounded-md font-black uppercase tracking-widest">{field.type}</span>
-                  {!field.isActive && <span className="text-[10px] bg-red-50 text-red-300 px-2 py-0.5 rounded-md font-black uppercase tracking-widest">Inactivo</span>}
+
+              {editingFieldId === field.id ? (
+                <div className="flex-1 space-y-3 mr-4">
+                  <input
+                    type="text"
+                    value={editingFieldName}
+                    onChange={(e) => setEditingFieldName(e.target.value)}
+                    className="w-full px-4 py-2 rounded-xl border-2 border-medical-200 outline-none focus:ring-4 focus:ring-medical-50 font-bold"
+                  />
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black text-slate-400 uppercase">Tipo:</span>
+                    <div className="flex bg-slate-100 p-0.5 rounded-lg gap-0.5">
+                      {(['number', 'text', 'boolean'] as const).map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => setEditingFieldType(type)}
+                          className={`px-2 py-1 rounded-md text-[9px] font-black uppercase transition-all ${editingFieldType === type
+                            ? 'bg-white text-medical-600 shadow-xs'
+                            : 'text-slate-400 hover:text-slate-600'
+                            }`}
+                        >
+                          {type === 'number' ? 'Num' : type === 'text' ? 'Txt' : 'Si/No'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="flex-1">
+                  <p className={`font-black text-lg tracking-tight ${field.isActive ? 'text-slate-800' : 'text-slate-300 line-through'}`}>
+                    {field.label}
+                  </p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[10px] bg-slate-100 text-slate-400 px-2 py-0.5 rounded-md font-black uppercase tracking-widest">
+                      {field.type === 'number' ? 'Numérico' : field.type === 'text' ? 'Texto' : 'Si/No'}
+                    </span>
+                    {!field.isActive && <span className="text-[10px] bg-red-50 text-red-300 px-2 py-0.5 rounded-md font-black uppercase tracking-widest">Inactivo</span>}
+                  </div>
+                </div>
+              )}
 
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => handleToggleField(field.id)}
-                  className={`p-1 rounded-xl transition-all ${field.isActive ? 'text-medical-500 hover:bg-medical-50' : 'text-slate-200 hover:bg-slate-100'}`}
-                >
-                  {field.isActive ? <CheckSquare size={32} strokeWidth={2.5} /> : <Square size={32} strokeWidth={1} />}
-                </button>
+              <div className="flex items-center gap-2">
+                {editingFieldId === field.id ? (
+                  <>
+                    <button
+                      onClick={handleUpdateField}
+                      className="p-2 text-medical-600 hover:bg-medical-50 rounded-xl transition-all"
+                    >
+                      <Save size={22} />
+                    </button>
+                    <button
+                      onClick={cancelEditing}
+                      className="p-2 text-slate-400 hover:bg-slate-100 rounded-xl transition-all"
+                    >
+                      <X size={22} />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => handleToggleField(field.id)}
+                      className={`p-1 rounded-xl transition-all ${field.isActive ? 'text-medical-500 hover:bg-medical-50' : 'text-slate-200 hover:bg-slate-100'}`}
+                    >
+                      {field.isActive ? <CheckSquare size={32} strokeWidth={2.5} /> : <Square size={32} strokeWidth={1} />}
+                    </button>
 
-                <button
-                  onClick={() => handleDeleteField(field.id)}
-                  className="p-2 text-slate-200 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
-                >
-                  <Trash2 size={22} />
-                </button>
+                    <button
+                      onClick={() => startEditing(field)}
+                      className="p-2 text-slate-300 hover:text-medical-500 hover:bg-medical-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                    >
+                      <Edit2 size={20} />
+                    </button>
+
+                    <button
+                      onClick={() => handleDeleteField(field.id)}
+                      className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))}

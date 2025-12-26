@@ -10,6 +10,9 @@ import { AuthProvider, useAuth } from './hooks/useAuth';
 const AppRoutes: React.FC = () => {
   const { user, loading } = useAuth();
 
+  // Check if we have a reason to expect a user (saved token)
+  const hasToken = !!localStorage.getItem('medicense-auth-token');
+
   React.useEffect(() => {
     if (!loading) {
       const loader = document.getElementById('initial-loader');
@@ -22,7 +25,9 @@ const AppRoutes: React.FC = () => {
     }
   }, [loading]);
 
-  if (loading) {
+  // Only show the blocking loader if we are actually loading AND we expect to find a session
+  // or if we are in the very first milliseconds of boot.
+  if (loading && hasToken) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center space-y-8 animate-in fade-in duration-700">
@@ -40,7 +45,7 @@ const AppRoutes: React.FC = () => {
     );
   }
 
-  if (!user) {
+  if (!user && !loading) {
     return <Login />;
   }
 
@@ -57,11 +62,15 @@ const AppRoutes: React.FC = () => {
   );
 };
 
+import { SaveProvider } from './components/SaveContext';
+
 const App: React.FC = () => {
   return (
     <HashRouter>
       <AuthProvider>
-        <AppRoutes />
+        <SaveProvider>
+          <AppRoutes />
+        </SaveProvider>
       </AuthProvider>
     </HashRouter>
   );

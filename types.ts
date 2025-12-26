@@ -14,6 +14,7 @@ export interface Report {
   id: string;
   location: string;
   timestamp: string; // ISO string
+  updatedAt?: string; // ISO string
   notes: string;
   data: ReportData;
   userId?: string;

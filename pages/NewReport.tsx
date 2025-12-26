@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Save, MapPin, Clock, FileText, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { Save, MapPin, Clock, FileText, ChevronDown, ChevronUp, Loader2, Check, X } from 'lucide-react';
 import { storageService } from '../services/storage';
 import { FieldDefinition, Report } from '../types';
 import { format } from 'date-fns';
 import { useAuth } from '../hooks/useAuth';
 import { es } from 'date-fns/locale';
 import Skeleton from '../components/Skeleton';
+import { useSave } from '../components/SaveContext';
 
 const NewReport: React.FC = () => {
   const { user } = useAuth();
@@ -17,8 +18,19 @@ const NewReport: React.FC = () => {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [notes, setNotes] = useState('');
   const [showAllFields, setShowAllFields] = useState(true);
+  const [existingTimestamp, setExistingTimestamp] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const { setSaveTrigger, setIsSaving: setGlobalIsSaving } = useSave();
+
+  useEffect(() => {
+    setSaveTrigger(() => handleSave);
+    return () => setSaveTrigger(null);
+  }, [location, formData, notes, existingTimestamp]);
+
+  useEffect(() => {
+    setGlobalIsSaving(isSaving);
+  }, [isSaving]);
 
   useEffect(() => {
     if (user) {
@@ -40,22 +52,29 @@ const NewReport: React.FC = () => {
         setLocation(existingReport.location);
         setFormData(existingReport.data);
         setNotes(existingReport.notes || '');
+        setExistingTimestamp(existingReport.timestamp);
       }
     } else {
       // Initialize form data
       const initialData: any = {};
       loadedFields.forEach(f => {
         if (f.type === 'number') initialData[f.id] = '';
+        else if (f.type === 'boolean') initialData[f.id] = null;
+        else initialData[f.id] = '';
       });
       setFormData(initialData);
     }
     setIsLoading(false);
   };
 
-  const handleInputChange = (id: string, value: string, type: string) => {
+  const handleInputChange = (id: string, value: any, type: string) => {
     setFormData(prev => ({
       ...prev,
-      [id]: type === 'number' ? (value === '' ? '' : Number(value)) : value
+      [id]: type === 'number'
+        ? (value === '' ? '' : Number(value))
+        : type === 'boolean'
+          ? value
+          : value
     }));
   };
 
@@ -70,7 +89,7 @@ const NewReport: React.FC = () => {
     try {
       const reportData = {
         location,
-        timestamp: new Date().toISOString(),
+        timestamp: id && existingTimestamp ? existingTimestamp : new Date().toISOString(),
         notes,
         data: formData,
       };
@@ -177,14 +196,40 @@ const NewReport: React.FC = () => {
                   <label className="block text-[11px] font-black text-slate-500 mb-2 uppercase tracking-tight">
                     {field.label}
                   </label>
-                  <input
-                    type={field.type === 'number' ? 'number' : 'text'}
-                    inputMode={field.type === 'number' ? 'numeric' : 'text'}
-                    value={formData[field.id]}
-                    onChange={(e) => handleInputChange(field.id, e.target.value, field.type)}
-                    className="w-full px-5 py-3.5 rounded-2xl border-2 border-slate-200 bg-white focus:bg-white focus:border-medical-500 focus:ring-4 focus:ring-medical-50 focus:shadow-lg focus:shadow-medical-500/5 outline-none transition-all text-xl font-black text-slate-800 placeholder:text-slate-300 shadow-sm"
-                    placeholder="0"
-                  />
+
+                  {field.type === 'boolean' ? (
+                    <div className="flex bg-slate-100 p-1.5 rounded-2xl gap-2">
+                      <button
+                        onClick={() => handleInputChange(field.id, true, field.type)}
+                        className={`flex-1 py-3 px-4 rounded-xl font-black flex items-center justify-center gap-2 transition-all ${formData[field.id] === true
+                          ? 'bg-medical-600 text-white shadow-lg shadow-medical-500/30 active:scale-95'
+                          : 'bg-white text-slate-400 hover:text-slate-600'
+                          }`}
+                      >
+                        <Check size={18} />
+                        <span>Si</span>
+                      </button>
+                      <button
+                        onClick={() => handleInputChange(field.id, false, field.type)}
+                        className={`flex-1 py-3 px-4 rounded-xl font-black flex items-center justify-center gap-2 transition-all ${formData[field.id] === false
+                          ? 'bg-red-500 text-white shadow-lg shadow-red-500/30 active:scale-95'
+                          : 'bg-white text-slate-400 hover:text-slate-600'
+                          }`}
+                      >
+                        <X size={18} />
+                        <span>No</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <input
+                      type={field.type === 'number' ? 'number' : 'text'}
+                      inputMode={field.type === 'number' ? 'numeric' : 'text'}
+                      value={formData[field.id]}
+                      onChange={(e) => handleInputChange(field.id, e.target.value, field.type)}
+                      className="w-full px-5 py-3.5 rounded-2xl border-2 border-slate-200 bg-white focus:bg-white focus:border-medical-500 focus:ring-4 focus:ring-medical-50 focus:shadow-lg focus:shadow-medical-500/5 outline-none transition-all text-xl font-black text-slate-800 placeholder:text-slate-300 shadow-sm"
+                      placeholder={field.type === 'number' ? '0' : '...'}
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -207,22 +252,7 @@ const NewReport: React.FC = () => {
         </div>
       </div>
 
-      <div className="pt-4">
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="w-full bg-medical-600 hover:bg-medical-700 text-white font-black py-5 rounded-2xl shadow-xl shadow-medical-500/30 flex items-center justify-center gap-3 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed group text-lg"
-        >
-          {isSaving ? (
-            <Loader2 className="w-6 h-6 animate-spin" />
-          ) : (
-            <>
-              <Save size={24} className="group-hover:scale-110 transition-transform" />
-              <span>{id ? 'Actualizar Reporte' : 'Guardar y Finalizar'}</span>
-            </>
-          )}
-        </button>
-      </div>
+      {/* Remove individual Save button as it's now in Layout's FAB */}
     </div>
   );
 };

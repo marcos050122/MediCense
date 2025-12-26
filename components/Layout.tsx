@@ -5,6 +5,9 @@ import { useAuth } from '../hooks/useAuth';
 import { exportToExcel, exportToPDF } from '../services/exportService';
 import { storageService } from '../services/storage';
 import { useState } from 'react';
+import SyncIndicator from './SyncIndicator';
+import { useSave } from './SaveContext';
+import { Save, Loader2 } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -16,6 +19,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const { saveTrigger, isSaving } = useSave();
+
+  const isFormPage = location.pathname.startsWith('/new') || location.pathname.startsWith('/edit');
 
   const handleExport = async (type: 'pdf' | 'excel') => {
     if (!user) return;
@@ -48,79 +54,99 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800">
+    <div className="h-screen bg-slate-50 flex flex-col font-sans text-slate-800 overflow-hidden">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10 px-4 h-16 flex items-center justify-between shadow-sm">
-        <div className="flex items-center">
+      <header className="bg-white border-b border-slate-200 px-4 h-16 flex items-center justify-between shadow-sm z-30">
+        <div
+          onClick={() => navigate('/')}
+          className="flex items-center cursor-pointer hover:opacity-80 transition-opacity active:scale-95 duration-200"
+        >
           <img src="/logo.png" alt="MediCenso Logo" className="h-12 w-auto" />
         </div>
 
-        <div className="relative">
-          {user && (
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="flex items-center space-x-2 hover:bg-slate-50 p-1.5 rounded-2xl transition-all border border-transparent hover:border-slate-100"
-            >
-              <img
-                src={user.user_metadata.avatar_url || `https://ui-avatars.com/api/?name=${user.email}`}
-                alt="Profile"
-                className="w-8 h-8 rounded-xl border-2 border-slate-100 shadow-sm"
-              />
-              <ChevronDown size={14} className={`text-slate-400 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
-            </button>
-          )}
+        <div className="flex items-center gap-3">
+          {user && <SyncIndicator />}
 
-          {isMenuOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-20"
-                onClick={() => setIsMenuOpen(false)}
-              ></div>
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-3xl shadow-2xl border border-slate-100 py-2 z-30 animate-in fade-in zoom-in-95 duration-100 origin-top-right">
-                <div className="px-4 py-3 border-b border-slate-50 mb-1">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Conectado como</p>
-                  <p className="text-xs font-bold text-slate-700 truncate">{user?.email}</p>
-                </div>
+          <div className="relative">
+            {user && (
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="flex items-center space-x-2 hover:bg-slate-50 p-1.5 rounded-2xl transition-all border border-transparent hover:border-slate-100"
+              >
+                <img
+                  src={user.user_metadata.avatar_url || `https://ui-avatars.com/api/?name=${user.email}`}
+                  alt="Profile"
+                  className="w-8 h-8 rounded-xl border-2 border-slate-100 shadow-sm"
+                />
+                <ChevronDown size={14} className={`text-slate-400 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+            )}
 
-                <div className="py-1">
-                  <button
-                    onClick={() => handleExport('pdf')}
-                    disabled={isExporting}
-                    className="w-full flex items-center space-x-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
-                  >
-                    <Download size={18} className="text-red-500" />
-                    <span className="font-bold">Exportar PDF</span>
-                  </button>
-                  <button
-                    onClick={() => handleExport('excel')}
-                    disabled={isExporting}
-                    className="w-full flex items-center space-x-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
-                  >
-                    <FileSpreadsheet size={18} className="text-green-600" />
-                    <span className="font-bold">Exportar Excel</span>
-                  </button>
-                </div>
+            {isMenuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-20"
+                  onClick={() => setIsMenuOpen(false)}
+                ></div>
+                <div className="absolute right-0 mt-2 w-72 bg-white rounded-[2rem] shadow-2xl border border-slate-100 py-3 z-30 animate-in fade-in zoom-in-95 duration-100 origin-top-right overflow-hidden">
+                  <div className="px-6 py-4 flex flex-col items-center text-center border-b border-slate-50 mb-2">
+                    <img
+                      src={user?.user_metadata.avatar_url || `https://ui-avatars.com/api/?name=${user?.email}`}
+                      alt="Profile"
+                      className="w-20 h-20 rounded-[1.5rem] border-4 border-slate-50 shadow-md mb-3"
+                    />
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Cuenta Conectada</p>
+                    <p className="text-slate-900 font-black text-lg leading-tight truncate w-full">{user?.user_metadata.full_name || 'Usuario'}</p>
+                    <p className="text-slate-400 text-xs font-medium truncate w-full">{user?.email}</p>
+                  </div>
 
-                <div className="border-t border-slate-50 mt-1 pt-1">
-                  <button
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      signOut();
-                    }}
-                    className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors group"
-                  >
-                    <LogOut size={18} className="group-hover:translate-x-1 transition-transform" />
-                    <span className="font-black uppercase tracking-tighter">Cerrar Sesión</span>
-                  </button>
+                  <div className="px-2 space-y-1">
+                    <p className="px-4 py-1 text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Acciones</p>
+                    <button
+                      onClick={() => handleExport('pdf')}
+                      disabled={isExporting}
+                      className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-slate-600 hover:bg-slate-50 rounded-2xl transition-all active:scale-[0.98]"
+                    >
+                      <div className="bg-red-50 p-2 rounded-xl text-red-500">
+                        <Download size={18} />
+                      </div>
+                      <span className="font-bold">Exportar PDF</span>
+                    </button>
+                    <button
+                      onClick={() => handleExport('excel')}
+                      disabled={isExporting}
+                      className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-slate-600 hover:bg-slate-50 rounded-2xl transition-all active:scale-[0.98]"
+                    >
+                      <div className="bg-green-50 p-2 rounded-xl text-green-600">
+                        <FileSpreadsheet size={18} />
+                      </div>
+                      <span className="font-bold">Exportar Excel</span>
+                    </button>
+                  </div>
+
+                  <div className="mt-4 px-2 pt-2 border-t border-slate-50">
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        signOut();
+                      }}
+                      className="w-full flex items-center space-x-3 px-4 py-4 text-sm text-red-500 hover:bg-red-50 rounded-2xl transition-all group active:scale-[0.98]"
+                    >
+                      <div className="bg-red-100/50 p-2 rounded-xl group-hover:bg-red-100 transition-colors">
+                        <LogOut size={18} className="group-hover:translate-x-1 transition-transform" />
+                      </div>
+                      <span className="font-black uppercase tracking-tighter">Cerrar Sesión</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </div>
       </header>
 
       {/* Main Content - Scrollable */}
-      <main className="flex-1 overflow-y-auto pb-24">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden pb-12 relative">
         {children}
       </main>
 
@@ -128,12 +154,26 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-end pb-safe safe-area shadow-lg z-20">
         <NavItem to="/" icon={Home} label="Inicio" />
         <div className="relative -top-5">
-          <button
-            onClick={() => navigate('/new')}
-            className="bg-medical-600 hover:bg-medical-700 text-white p-4 rounded-full shadow-lg shadow-medical-500/30 transition-transform active:scale-95 flex items-center justify-center"
-          >
-            <PlusCircle size={32} />
-          </button>
+          {isFormPage ? (
+            <button
+              onClick={() => saveTrigger?.()}
+              disabled={isSaving || !saveTrigger}
+              className="bg-accent-600 hover:bg-accent-700 text-white p-4 rounded-full shadow-lg shadow-accent-500/30 transition-all active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed min-w-[64px] min-h-[64px]"
+            >
+              {isSaving ? (
+                <Loader2 size={32} className="animate-spin" />
+              ) : (
+                <Save size={32} />
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate('/new')}
+              className="bg-medical-600 hover:bg-medical-700 text-white p-4 rounded-full shadow-lg shadow-medical-500/30 transition-transform active:scale-95 flex items-center justify-center"
+            >
+              <PlusCircle size={32} />
+            </button>
+          )}
         </div>
         <NavItem to="/settings" icon={Settings} label="Config" />
       </nav>
