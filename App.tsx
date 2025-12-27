@@ -6,9 +6,20 @@ import NewReport from './pages/NewReport';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './hooks/useAuth';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 
 const AppRoutes: React.FC = () => {
   const { user, loading } = useAuth();
+
+  // PWA Register
+  useRegisterSW({
+    onRegistered(r) {
+      console.log('SW Registered:', r);
+    },
+    onRegisterError(error) {
+      console.error('SW registration error', error);
+    },
+  });
 
   // Check if we have a reason to expect a user (saved token)
   const hasToken = !!localStorage.getItem('medicense-auth-token');
