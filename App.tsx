@@ -73,15 +73,15 @@ const AppRoutes: React.FC = () => {
   );
 };
 
-import { SaveProvider } from './components/SaveContext';
+import { FabProvider } from './components/FabContext';
 
 const App: React.FC = () => {
   return (
     <HashRouter>
       <AuthProvider>
-        <SaveProvider>
+        <FabProvider>
           <AppRoutes />
-        </SaveProvider>
+        </FabProvider>
       </AuthProvider>
     </HashRouter>
   );

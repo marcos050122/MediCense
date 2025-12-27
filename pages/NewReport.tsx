@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { useAuth } from '../hooks/useAuth';
 import { es } from 'date-fns/locale';
 import Skeleton from '../components/Skeleton';
-import { useSave } from '../components/SaveContext';
+import { useFab } from '../components/FabContext';
 
 const NewReport: React.FC = () => {
   const { user } = useAuth();
@@ -21,12 +21,16 @@ const NewReport: React.FC = () => {
   const [existingTimestamp, setExistingTimestamp] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { setSaveTrigger, setIsSaving: setGlobalIsSaving } = useSave();
+  const { setFabAction, setIsFabLoading: setGlobalIsSaving, setFabIcon } = useFab();
   const locationInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setSaveTrigger(() => handleSave);
-    return () => setSaveTrigger(null);
+    setFabIcon('save');
+    setFabAction(() => handleSave);
+    return () => {
+      setFabAction(null);
+      setFabIcon('plus');
+    };
   }, [location, formData, notes, existingTimestamp]);
 
   useEffect(() => {

@@ -1,13 +1,13 @@
 import React from 'react';
-import { Home, PlusCircle, Settings, LogOut, FileText, Download, FileSpreadsheet, ChevronDown } from 'lucide-react';
+import { Home, Settings, LogOut, FileText, Download, FileSpreadsheet, ChevronDown } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { exportToExcel, exportToPDF } from '../services/exportService';
 import { storageService } from '../services/storage';
 import { useState } from 'react';
 import SyncIndicator from './SyncIndicator';
-import { useSave } from './SaveContext';
-import { Save, Loader2 } from 'lucide-react';
+import { PlusCircle, Save, Loader2 } from 'lucide-react';
+import { useFab } from './FabContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,7 +19,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const { saveTrigger, isSaving } = useSave();
+  const { fabAction, isFabLoading, fabIcon } = useFab();
 
   const isFormPage = location.pathname.startsWith('/new') || location.pathname.startsWith('/edit');
 
@@ -154,26 +154,28 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/60 flex justify-around items-end pb-safe safe-area shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.05)] z-40">
         <NavItem to="/" icon={Home} label="Inicio" />
         <div className="relative -top-6">
-          {isFormPage ? (
-            <button
-              onClick={() => saveTrigger?.()}
-              disabled={isSaving || !saveTrigger}
-              className="bg-accent-600 hover:bg-accent-700 text-white p-5 rounded-[2rem] shadow-2xl shadow-accent-600/40 transition-all active:scale-90 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed min-w-[72px] min-h-[72px]"
-            >
-              {isSaving ? (
-                <Loader2 size={36} className="animate-spin" />
-              ) : (
-                <Save size={36} />
-              )}
-            </button>
-          ) : (
-            <button
-              onClick={() => navigate('/new')}
-              className="bg-medical-600 hover:bg-medical-700 text-white p-5 rounded-[2rem] shadow-2xl shadow-medical-600/40 transition-all active:scale-90 flex items-center justify-center min-w-[72px] min-h-[72px]"
-            >
+          <button
+            onClick={() => {
+              if (fabAction) {
+                fabAction();
+              } else {
+                navigate('/new');
+              }
+            }}
+            disabled={isFabLoading}
+            className={`text-white p-5 rounded-[2rem] shadow-2xl transition-all active:scale-90 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed min-w-[72px] min-h-[72px] ${fabIcon === 'save'
+              ? 'bg-accent-600 hover:bg-accent-700 shadow-accent-600/40'
+              : 'bg-medical-600 hover:bg-medical-700 shadow-medical-600/40'
+              }`}
+          >
+            {isFabLoading ? (
+              <Loader2 size={36} className="animate-spin" />
+            ) : fabIcon === 'save' ? (
+              <Save size={36} />
+            ) : (
               <PlusCircle size={36} />
-            </button>
-          )}
+            )}
+          </button>
         </div>
         <NavItem to="/settings" icon={Settings} label="Config" />
       </nav>

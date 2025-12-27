@@ -3,6 +3,7 @@ import { storageService } from '../services/storage';
 import { FieldDefinition } from '../types';
 import { Plus, Trash2, CheckSquare, Square, GripVertical, AlertCircle, Cloud, User, LogOut, Loader2, ChevronUp, ChevronDown, Edit2, Save, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useFab } from '../components/FabContext';
 
 const Settings: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -15,6 +16,17 @@ const Settings: React.FC = () => {
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [editingFieldName, setEditingFieldName] = useState('');
   const [editingFieldType, setEditingFieldType] = useState<'text' | 'number' | 'boolean'>('number');
+  const { setFabAction, setFabIcon } = useFab();
+
+  useEffect(() => {
+    setFabAction(() => () => {
+      setIsAdding(prev => !prev);
+    });
+    setFabIcon('plus');
+    return () => {
+      setFabAction(null);
+    };
+  }, [setFabAction, setFabIcon]);
 
   useEffect(() => {
     if (user) {
@@ -137,12 +149,6 @@ const Settings: React.FC = () => {
             <div className="w-1.5 h-6 bg-medical-500 rounded-full"></div>
             <h3 className="font-black text-slate-800 uppercase tracking-tight">Campos Personalizados</h3>
           </div>
-          <button
-            onClick={() => setIsAdding(!isAdding)}
-            className="bg-medical-600 hover:bg-medical-700 text-white text-xs font-black py-2 px-4 rounded-xl shadow-lg shadow-medical-500/20 flex items-center gap-2 transition-all active:scale-95 uppercase tracking-tighter"
-          >
-            {isAdding ? 'Cerrar' : <><Plus size={14} /> Añadir Campo</>}
-          </button>
         </div>
 
         {isAdding && (
@@ -304,7 +310,7 @@ const Settings: React.FC = () => {
           </p>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
