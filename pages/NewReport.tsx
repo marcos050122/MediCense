@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Save, MapPin, Clock, FileText, ChevronDown, ChevronUp, Loader2, Check, X } from 'lucide-react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { Save, MapPin, Clock, FileText, ChevronDown, ChevronUp, Loader2, Check, X, Copy } from 'lucide-react';
 import { storageService } from '../services/storage';
 import { FieldDefinition, Report } from '../types';
 import { format } from 'date-fns';
@@ -13,6 +13,8 @@ const NewReport: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const locationState = useLocation();
+  const isNewFromTemplate = locationState.state?.isNew;
   const [fields, setFields] = useState<FieldDefinition[]>([]);
   const [location, setLocation] = useState('');
   const [formData, setFormData] = useState<Record<string, any>>({});
@@ -147,6 +149,40 @@ const NewReport: React.FC = () => {
     }
   };
 
+  const handleSaveAsTemplate = async () => {
+    if (!user) return;
+    if (!location.trim()) {
+      alert('Por favor ingrese la ubicación o referencia.');
+      return;
+    }
+
+    if (!window.confirm('¿Desea guardar estos datos como un nuevo reporte para el día de hoy?')) {
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const reportData = {
+        location,
+        timestamp: new Date().toISOString(),
+        notes,
+        data: formData,
+      };
+
+      const newReport = await storageService.saveReport(reportData, user.id);
+      if (newReport && newReport.id) {
+        navigate(`/edit/${newReport.id}`, { replace: true, state: { isNew: true } });
+      } else {
+        navigate('/');
+      }
+    } catch (error) {
+      console.error("Template save error:", error);
+      alert("Error al guardar como plantilla.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="p-4 space-y-6 max-w-2xl mx-auto pb-24">
@@ -185,28 +221,54 @@ const NewReport: React.FC = () => {
   return (
     <div className="p-4 space-y-4 max-w-2xl mx-auto pb-24">
       <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-300/40 border border-slate-200 overflow-hidden">
-        <div className="p-8 bg-slate-50/50 border-b border-slate-100 space-y-4">
-          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">
-            Ubicación o Referencia
-          </label>
-          <div className="relative group">
-            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-medical-500 group-focus-within:scale-110 transition-transform">
-              <MapPin size={24} />
+        <div className="p-8 bg-slate-50/50 border-b border-slate-100 space-y-6 relative">
+          <div className="flex justify-between items-start">
+            <div className="space-y-1">
+              <h2 className="text-[10px] font-black text-medical-500 uppercase tracking-[0.3em]">
+                {(id && !isNewFromTemplate) ? 'Modificando Reporte' : 'Nuevo Reporte'}
+              </h2>
+              <div className="flex items-center gap-2 text-slate-400">
+                <div className="bg-white p-1.5 rounded-lg border border-slate-200 shadow-sm">
+                  <Clock size={14} className="text-medical-500" />
+                </div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  {id && existingTimestamp
+                    ? format(new Date(existingTimestamp), 'eeee, dd MMMM HH:mm', { locale: es })
+                    : format(new Date(), 'eeee, dd MMMM HH:mm', { locale: es })}
+                </span>
+              </div>
             </div>
-            <input
-              ref={locationInputRef}
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Ej: Edificio 30, Apartamento 4B"
-              className="w-full pl-14 pr-6 py-5 rounded-3xl border-2 border-slate-200 bg-white focus:border-medical-500 focus:ring-4 focus:ring-medical-100 outline-none transition-all text-slate-900 font-black text-xl placeholder:text-slate-300 shadow-sm"
-            />
+
+            {id && (
+              <button
+                onClick={handleSaveAsTemplate}
+                disabled={isSaving}
+                title="Usar como plantilla para hoy"
+                className="group flex flex-col items-center gap-1.5 p-3 bg-white border-2 border-slate-200 text-slate-400 rounded-[1.5rem] hover:border-medical-400 hover:text-medical-600 hover:shadow-lg hover:shadow-medical-500/10 transition-all active:scale-90 disabled:opacity-50"
+              >
+                <Copy size={20} className="group-hover:scale-110 transition-transform" />
+                <span className="text-[8px] font-black uppercase tracking-tighter">Plantilla</span>
+              </button>
+            )}
           </div>
-          <div className="flex items-center gap-2.5 text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-            <div className="bg-slate-200/60 p-1.5 rounded-lg">
-              <Clock size={14} />
+
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">
+              Ubicación o Referencia
+            </label>
+            <div className="relative group">
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-medical-500 group-focus-within:scale-110 transition-transform">
+                <MapPin size={24} />
+              </div>
+              <input
+                ref={locationInputRef}
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Ej: Edificio 30, Apartamento 4B"
+                className="w-full pl-14 pr-6 py-5 rounded-3xl border-2 border-slate-200 bg-white focus:border-medical-500 focus:ring-4 focus:ring-medical-100 outline-none transition-all text-slate-900 font-black text-xl placeholder:text-slate-300 shadow-sm"
+              />
             </div>
-            <span>{format(new Date(), 'eeee, dd MMMM HH:mm', { locale: es })}</span>
           </div>
         </div>
 

@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, FileSpreadsheet, MapPin, Calendar, Users, Activity, Edit, Trash2, Database, FileText, Search, X } from 'lucide-react';
+import { Download, FileSpreadsheet, MapPin, Calendar, Users, Activity, Edit, Trash2, Database, FileText, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { storageService } from '../services/storage';
 import { exportToExcel, exportToPDF } from '../services/exportService';
 import { Report, FieldDefinition } from '../types';
-import { format } from 'date-fns';
+import { format, addDays, subDays, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAuth } from '../hooks/useAuth';
 import Skeleton from '../components/Skeleton';
@@ -18,6 +18,8 @@ const Dashboard: React.FC = () => {
   const [localDataCount, setLocalDataCount] = useState(0);
   const [isMigrating, setIsMigrating] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (user) {
@@ -59,17 +61,17 @@ const Dashboard: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('¿Está seguro de que desea eliminar este registro? Esta acción no se puede deshacer.')) {
+    if (window.confirm('¿Está seguro de que desea eliminar este reporte? Esta acción no se puede deshacer.')) {
       try {
         const success = await storageService.deleteReport(id);
         if (success) {
           setReports(prev => prev.filter(r => r.id !== id));
         } else {
-          alert('Error al intentar eliminar el registro.');
+          alert('Error al intentar eliminar el reporte.');
         }
       } catch (error) {
         console.error("Delete error:", error);
-        alert('Error al intentar eliminar el registro.');
+        alert('Error al intentar eliminar el reporte.');
       }
     }
   };
@@ -110,7 +112,15 @@ const Dashboard: React.FC = () => {
     </div>
   );
 
-  const totalPopulation = reports.reduce((acc, curr) => {
+  const reportsForDate = reports.filter(r =>
+    format(new Date(r.timestamp), 'yyyy-MM-dd') === selectedDate
+  );
+
+  const filteredReports = searchTerm
+    ? reports.filter(r => r.location.toLowerCase().includes(searchTerm.toLowerCase()))
+    : reportsForDate.filter(r => r.location.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const totalPopulation = filteredReports.reduce((acc, curr) => {
     const popField = fields.find(f =>
       f.id === 'a1b2c3d4-e5f6-4a5b-b6c7-d8e9f0a1b2c3' ||
       f.id === 'total_pop' ||
@@ -118,10 +128,6 @@ const Dashboard: React.FC = () => {
     );
     return acc + (Number(curr.data[popField?.id || '']) || 0);
   }, 0);
-
-  const filteredReports = reports.filter(r =>
-    r.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const latestActiveReportId = reports.length > 0
     ? reports.reduce((latest, current) => {
@@ -139,13 +145,61 @@ const Dashboard: React.FC = () => {
           <div className="flex items-center gap-4 bg-white rounded-2xl p-2.5 border border-slate-200 shadow-sm">
             <div className="flex flex-col px-2">
               <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Reportes</span>
-              <span className="text-base font-black text-medical-600 leading-none mt-1">{reports.length}</span>
+              <span className="text-base font-black text-medical-600 leading-none mt-1">{filteredReports.length}</span>
             </div>
             <div className="w-px h-6 bg-slate-100"></div>
             <div className="flex flex-col px-2">
               <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Población</span>
               <span className="text-base font-black text-accent-600 leading-none mt-1">{totalPopulation}</span>
             </div>
+          </div>
+
+          {/* Date Selector */}
+          <div className="flex items-center gap-2 bg-white rounded-2xl p-1 border border-slate-200 shadow-sm">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                const currentDate = parseISO(selectedDate);
+                const prevDate = subDays(currentDate, 1);
+                setSelectedDate(format(prevDate, 'yyyy-MM-dd'));
+              }}
+              className="p-2 hover:bg-slate-50 text-slate-400 hover:text-medical-600 transition-colors rounded-xl"
+            >
+              <ChevronLeft size={18} />
+            </button>
+
+            <div
+              className="relative cursor-pointer"
+              onClick={() => dateInputRef.current?.showPicker()}
+            >
+              <input
+                ref={dateInputRef}
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="absolute inset-0 opacity-0 pointer-events-none"
+              />
+              <div className="flex flex-col px-1 items-center min-w-[100px] hover:bg-slate-50 rounded-xl transition-colors py-1">
+                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Fecha</span>
+                <span className="text-sm font-black text-slate-700 leading-none mt-1">
+                  {selectedDate === format(new Date(), 'yyyy-MM-dd')
+                    ? 'Hoy'
+                    : format(new Date(selectedDate + 'T12:00:00'), 'dd MMM', { locale: es })}
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                const currentDate = parseISO(selectedDate);
+                const nextDate = addDays(currentDate, 1);
+                setSelectedDate(format(nextDate, 'yyyy-MM-dd'));
+              }}
+              className="p-2 hover:bg-slate-50 text-slate-400 hover:text-medical-600 transition-colors rounded-xl"
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
         </div>
 
@@ -174,12 +228,12 @@ const Dashboard: React.FC = () => {
 
       {/* Reports List */}
       <div className="pb-24 space-y-4">
-        {reports.length === 0 ? (
+        {reportsForDate.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100 p-8 shadow-sm">
             <div className="bg-slate-50 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6">
               <Activity className="text-slate-300" size={40} />
             </div>
-            <h3 className="text-slate-900 font-black text-xl">Sin registros</h3>
+            <h3 className="text-slate-900 font-black text-xl">Sin reportes</h3>
             <p className="text-slate-400 text-sm mt-2 max-w-[240px] mx-auto leading-relaxed">Comienza creando tu primer reporte usando el botón inferior.</p>
           </div>
         ) : filteredReports.length === 0 ? (
