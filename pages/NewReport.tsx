@@ -56,14 +56,27 @@ const NewReport: React.FC = () => {
         setExistingTimestamp(existingReport.timestamp);
       }
     } else {
-      // Initialize form data
-      const initialData: any = {};
-      loadedFields.forEach(f => {
-        if (f.type === 'number') initialData[f.id] = '';
-        else if (f.type === 'boolean') initialData[f.id] = null;
-        else initialData[f.id] = '';
-      });
-      setFormData(initialData);
+      // Restore from draft if available
+      const savedDraft = localStorage.getItem('medicense-report-draft');
+      if (savedDraft) {
+        try {
+          const draft = JSON.parse(savedDraft);
+          setLocation(draft.location || '');
+          setFormData(draft.formData || {});
+          setNotes(draft.notes || '');
+        } catch (e) {
+          console.error("Error parsing draft:", e);
+        }
+      } else {
+        // Initialize form data
+        const initialData: any = {};
+        loadedFields.forEach(f => {
+          if (f.type === 'number') initialData[f.id] = '';
+          else if (f.type === 'boolean') initialData[f.id] = null;
+          else initialData[f.id] = '';
+        });
+        setFormData(initialData);
+      }
     }
     setIsLoading(false);
 
@@ -74,6 +87,18 @@ const NewReport: React.FC = () => {
       }, 100);
     }
   };
+
+  // Persist draft to localStorage
+  useEffect(() => {
+    if (!id && !isLoading && user) {
+      const draft = {
+        location,
+        formData,
+        notes
+      };
+      localStorage.setItem('medicense-report-draft', JSON.stringify(draft));
+    }
+  }, [location, formData, notes, id, isLoading, user]);
 
   const handleInputChange = (id: string, value: any, type: string) => {
     setFormData(prev => ({
@@ -106,6 +131,8 @@ const NewReport: React.FC = () => {
         await storageService.updateReport({ ...reportData, id, userId: user.id });
       } else {
         await storageService.saveReport(reportData, user.id);
+        // Clear draft after successful save
+        localStorage.removeItem('medicense-report-draft');
       }
       navigate('/');
     } catch (error) {
