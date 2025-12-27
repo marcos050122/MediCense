@@ -152,8 +152,8 @@ const Settings: React.FC = () => {
         </div>
 
         {isAdding && (
-          <div className="p-6 bg-medical-50/50 border-b border-medical-100 animate-in fade-in slide-in-from-top-4 space-y-4">
-            <div className="flex gap-3">
+          <div className="p-4 sm:p-6 bg-medical-50/50 border-b border-medical-100 animate-in fade-in slide-in-from-top-4 space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="text"
                 value={newFieldName}
@@ -165,7 +165,7 @@ const Settings: React.FC = () => {
               <button
                 onClick={handleAddField}
                 disabled={isSaving}
-                className="bg-medical-600 hover:bg-medical-700 text-white px-6 py-3 rounded-2xl font-black shadow-lg shadow-medical-500/30 transition-all active:scale-95 disabled:opacity-50"
+                className="bg-medical-600 hover:bg-medical-700 text-white px-6 py-4 sm:py-3 rounded-2xl font-black shadow-lg shadow-medical-500/30 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center min-h-[56px] sm:min-h-0"
               >
                 {isSaving ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Guardar'}
               </button>
@@ -192,41 +192,41 @@ const Settings: React.FC = () => {
 
         <div className="divide-y divide-slate-100">
           {fields.map((field, index) => (
-            <div key={field.id} className="flex items-center p-6 hover:bg-slate-50/50 transition-colors group">
-              <div className="flex flex-col gap-1 mr-4">
+            <div key={field.id} className="flex flex-col sm:flex-row sm:items-center p-4 sm:p-6 hover:bg-slate-50/50 transition-colors group gap-4 sm:gap-0">
+              <div className="flex flex-row sm:flex-col gap-1 sm:mr-4 order-2 sm:order-1">
                 <button
                   onClick={() => handleMoveField(index, 'up')}
                   disabled={index === 0}
-                  className="p-2 text-slate-300 hover:text-medical-500 hover:bg-medical-50 rounded-xl transition-all disabled:opacity-0 active:scale-90"
+                  className="p-3 sm:p-2 text-slate-300 hover:text-medical-500 hover:bg-medical-50 rounded-xl transition-all disabled:opacity-0 active:scale-90 bg-slate-50 sm:bg-transparent"
                 >
                   <ChevronUp size={24} />
                 </button>
                 <button
                   onClick={() => handleMoveField(index, 'down')}
                   disabled={index === fields.length - 1}
-                  className="p-2 text-slate-300 hover:text-medical-500 hover:bg-medical-50 rounded-xl transition-all disabled:opacity-0 active:scale-90"
+                  className="p-3 sm:p-2 text-slate-300 hover:text-medical-500 hover:bg-medical-50 rounded-xl transition-all disabled:opacity-0 active:scale-90 bg-slate-50 sm:bg-transparent"
                 >
                   <ChevronDown size={24} />
                 </button>
               </div>
 
               {editingFieldId === field.id ? (
-                <div className="flex-1 space-y-3 mr-4">
+                <div className="flex-1 space-y-3 sm:mr-4 order-1 sm:order-2">
                   <input
                     type="text"
                     value={editingFieldName}
                     onChange={(e) => setEditingFieldName(e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl border-2 border-medical-200 outline-none focus:ring-4 focus:ring-medical-50 font-bold"
+                    className="w-full px-4 py-3 sm:py-2 rounded-xl border-2 border-medical-200 outline-none focus:ring-4 focus:ring-medical-50 font-bold"
                   />
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-black text-slate-400 uppercase">Tipo:</span>
-                    <div className="flex bg-slate-100 p-0.5 rounded-lg gap-0.5">
+                    <div className="flex bg-slate-100 p-1 rounded-lg gap-1">
                       {(['number', 'text', 'boolean'] as const).map((type) => (
                         <button
                           key={type}
                           onClick={() => setEditingFieldType(type)}
-                          className={`px-2 py-1 rounded-md text-[9px] font-black uppercase transition-all ${editingFieldType === type
-                            ? 'bg-white text-medical-600 shadow-xs'
+                          className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase transition-all ${editingFieldType === type
+                            ? 'bg-white text-medical-600 shadow-sm'
                             : 'text-slate-400 hover:text-slate-600'
                             }`}
                         >
@@ -237,12 +237,12 @@ const Settings: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="flex-1">
-                  <p className={`font-black text-lg tracking-tight ${field.isActive ? 'text-slate-800' : 'text-slate-300 line-through'}`}>
+                <div className="flex-1 min-w-0 order-1 sm:order-2">
+                  <p className={`font-black text-lg tracking-tight break-words ${field.isActive ? 'text-slate-800' : 'text-slate-300 line-through'}`}>
                     {field.label}
                   </p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] bg-slate-100 text-slate-400 px-2 py-0.5 rounded-md font-black uppercase tracking-widest">
+                    <span className="text-[10px] bg-slate-100 text-slate-400 px-2 py-0.5 rounded-md font-black uppercase tracking-widest whitespace-nowrap">
                       {field.type === 'number' ? 'Numérico' : field.type === 'text' ? 'Texto' : 'Si/No'}
                     </span>
                     {!field.isActive && <span className="text-[10px] bg-red-50 text-red-300 px-2 py-0.5 rounded-md font-black uppercase tracking-widest">Inactivo</span>}
@@ -250,41 +250,46 @@ const Settings: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 order-3">
                 {editingFieldId === field.id ? (
                   <>
                     <button
                       onClick={handleUpdateField}
-                      className="p-2 text-medical-600 hover:bg-medical-50 rounded-xl transition-all"
+                      className="p-3 sm:p-2 text-medical-600 hover:bg-medical-50 rounded-xl transition-all bg-medical-50 sm:bg-transparent"
+                      title="Guardar"
                     >
-                      <Save size={22} />
+                      <Save size={24} />
                     </button>
                     <button
                       onClick={cancelEditing}
-                      className="p-2 text-slate-400 hover:bg-slate-100 rounded-xl transition-all"
+                      className="p-3 sm:p-2 text-slate-400 hover:bg-slate-100 rounded-xl transition-all bg-slate-50 sm:bg-transparent"
+                      title="Cancelar"
                     >
-                      <X size={22} />
+                      <X size={24} />
                     </button>
                   </>
                 ) : (
                   <>
                     <button
                       onClick={() => handleToggleField(field.id)}
-                      className={`p-2 rounded-xl transition-all ${field.isActive ? 'text-medical-500 hover:bg-medical-50' : 'text-slate-200 hover:bg-slate-100'}`}
+                      className={`p-1 sm:p-2 rounded-xl transition-all ${field.isActive ? 'text-medical-500 hover:bg-medical-50' : 'text-slate-200 hover:bg-slate-100'}`}
+                      title={field.isActive ? 'Desactivar' : 'Activar'}
                     >
                       {field.isActive ? <CheckSquare size={36} strokeWidth={2.5} /> : <Square size={36} strokeWidth={1} />}
                     </button>
 
                     <button
                       onClick={() => startEditing(field)}
-                      className="p-3 text-slate-400 hover:text-medical-500 hover:bg-medical-50 rounded-xl transition-all md:opacity-0 md:group-hover:opacity-100 active:scale-90"
+                      className="p-3 text-slate-400 hover:text-medical-500 hover:bg-medical-50 rounded-xl transition-all sm:opacity-0 sm:group-hover:opacity-100 active:scale-90 bg-slate-50 sm:bg-transparent"
+                      title="Editar"
                     >
                       <Edit2 size={22} />
                     </button>
 
                     <button
                       onClick={() => handleDeleteField(field.id)}
-                      className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all md:opacity-0 md:group-hover:opacity-100 active:scale-90"
+                      className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all sm:opacity-0 sm:group-hover:opacity-100 active:scale-90 bg-slate-50 sm:bg-transparent"
+                      title="Eliminar"
                     >
                       <Trash2 size={22} />
                     </button>
